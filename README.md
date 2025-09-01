@@ -15,26 +15,42 @@ In real-world projects, as your codebase grows, well-organized specs make it muc
 Use `context` to group examples that share a setup, state, or condition. It’s like saying, “In this situation, here’s what should happen.”
 
 ```ruby
-# /spec/string_manipulator_spec.rb
-RSpec.describe StringManipulator do
-  context "when reversing a string" do
-    it "returns the reversed string" do
-      expect(StringManipulator.new.reverse("abc")).to eq("cba")
+# /spec/context_and_nested_spec.rb
+RSpec.describe ProjectManager do
+  let(:manager) { ProjectManager.new }
+  let(:kitchen) { RemodelProject.new("Kitchen Remodel") }
+  let(:bathroom) { RemodelProject.new("Bathroom Remodel") }
+
+  describe "#add_project" do
+    it "adds a project to the manager" do
+      manager.add_project(kitchen)
+      expect(manager.projects).to include(kitchen)
     end
   end
 
-  context "when upcasing a string" do
-    it "returns the string in uppercase" do
-      expect(StringManipulator.new.upcase("abc")).to eq("ABC")
-    end
-  end
+  describe "#find_by_status" do
+    context "when no projects have started" do
+      before do
+        manager.add_project(kitchen)
+        manager.add_project(bathroom)
+      end
 
-  context "when given an empty string" do
-    it "returns an empty string when reversed" do
-      expect(StringManipulator.new.reverse("")).to eq("")
+      it "finds all projects with status 'not started'" do
+        expect(manager.find_by_status("not started")).to contain_exactly(kitchen, bathroom)
+      end
     end
-    it "returns an empty string when upcased" do
-      expect(StringManipulator.new.upcase("")).to eq("")
+
+    context "when some projects are in progress" do
+      before do
+        manager.add_project(kitchen)
+        manager.add_project(bathroom)
+        kitchen.start
+      end
+
+      it "finds projects by status" do
+        expect(manager.find_by_status("in progress")).to include(kitchen)
+        expect(manager.find_by_status("not started")).to include(bathroom)
+      end
     end
   end
 end
@@ -63,31 +79,46 @@ Notice how the output mirrors your `describe` and `context` structure, making it
 Use nested `describe` blocks to break down your specs even further. This is great for testing different methods, edge cases, or behaviors within a class.
 
 ```ruby
-# /spec/calculator_spec.rb
-RSpec.describe Calculator do
-  describe "#add" do
-    context "with positive numbers" do
-      it "returns the sum" do
-        expect(Calculator.new.add(2, 3)).to eq(5)
-      end
-    end
+# /spec/context_and_nested_spec.rb
+RSpec.describe RemodelProject do
+  let(:project) { RemodelProject.new("Basement Remodel") }
 
-    context "with negative numbers" do
-      it "returns the sum" do
-        expect(Calculator.new.add(-2, -3)).to eq(-5)
-      end
-    end
-
-    context "with zero" do
-      it "returns the other number" do
-        expect(Calculator.new.add(0, 5)).to eq(5)
+  describe "#start" do
+    context "when the project has not started" do
+      it "sets status to 'in progress' and phase to planning" do
+        project.start
+        expect(project.status).to eq("in progress")
+        expect(project.current_phase).to eq("planning")
       end
     end
   end
 
-  describe "#subtract" do
-    it "returns the difference" do
-      expect(Calculator.new.subtract(5, 2)).to eq(3)
+  describe "#advance_phase" do
+    context "when the project is in progress" do
+      before { project.start }
+
+      it "advances through phases in order" do
+        expect(project.current_phase).to eq("planning")
+        project.advance_phase
+        expect(project.current_phase).to eq("demolition")
+        project.advance_phase
+        expect(project.current_phase).to eq("construction")
+        project.advance_phase
+        expect(project.current_phase).to eq("finishing")
+      end
+
+      it "marks project as completed after last phase" do
+        4.times { project.advance_phase } # go through all phases
+        expect(project.completed?).to be true
+        expect(project.status).to eq("completed")
+        expect(project.current_phase).to be_nil
+      end
+    end
+
+    context "when the project is not in progress" do
+      it "does nothing if not started" do
+        expect { project.advance_phase }.not_to change { project.status }
+      end
     end
   end
 end
@@ -135,21 +166,43 @@ describe "Calculator"
 - Write descriptions in plain English—future you (and your teammates) will thank you! The text you use in `describe` and `context` appears in RSpec’s output, so make it human-readable and descriptive.
 - Don’t be afraid to nest blocks, but keep things readable.
 
-## Practice Prompts
+---
 
-Try these exercises to reinforce your learning. For each, write your own spec in the appropriate file (e.g., `/spec/calculator_spec.rb`).
+## Getting Hands-On: Student Instructions
 
-**Exercise 1: Use context for scenarios**
-Refactor a spec to use `context` blocks for different scenarios (e.g., valid vs invalid input, edge cases like empty strings or nil values).
+This lesson repo is set up for you to get hands-on practice with RSpec's `context` and nested `describe` blocks using a real-world home remodeling domain (RemodelProject/ProjectManager).
 
-**Exercise 2: Add nested describe blocks**
-Add nested `describe` blocks for each method in a class. How does it change the readability?
+**To get started:**
 
-**Exercise 3: Multi-level nesting**
-Write a spec with at least two levels of nesting. Try including a branch for an edge case (e.g., zero, nil, or an error condition). What are the benefits and drawbacks?
+1. **Fork and Clone** this repository to your own GitHub account and local machine.
+2. **Install dependencies:**
 
-**Exercise 4: Naming and organization reflection**
-Why is clear organization and descriptive naming important in testing? Write your answer in your own words.
+    ```sh
+    bundle install
+    ```
+
+3. **Run the specs:**
+
+    ```sh
+    bin/rspec
+    ```
+
+4. **Explore the code:**
+
+- The main domain code is in `lib/remodel_project.rb`.
+- The robust example specs are in `spec/context_and_nested_spec.rb`.
+
+5. **Implement the pending specs:**
+
+- There are at least two pending specs marked with `pending` in `spec/context_and_nested_spec.rb`.
+- Your task: Remove the `pending` line and implement the expectation so the spec passes.
+
+6. **Experiment:**
+
+   - Try adding your own examples using `context` and nested `describe` blocks.
+   - Make the specs fail on purpose to see the error messages and learn from them.
+
+All specs should pass except the pending ones. When you finish, all specs should be green!
 
 ---
 
