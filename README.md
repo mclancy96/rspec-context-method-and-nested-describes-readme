@@ -1,6 +1,6 @@
 # RSpec: The context Method & Nested Describes - Organizing Your Specs Like a Pro
 
-Welcome to Lesson 9! If your specs are starting to look like a pile of laundry—everything mixed together, hard to find what you need—this lesson is for you. Today, we’ll learn how to use `context` and nested `describe` blocks to organize your tests, make your intentions clear, and keep your sanity.
+If your specs are starting to look like a pile of laundry—everything mixed together, hard to find what you need—this lesson is for you. Today, we’ll learn how to use `context` and nested `describe` blocks to organize your tests, make your intentions clear, and keep your sanity.
 
 ---
 
